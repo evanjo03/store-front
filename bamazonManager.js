@@ -20,16 +20,13 @@ connection.connect(function (error) {
     startApplication()
 });
 
-
-
 function startApplication() {
-
     inquirer
         .prompt([
             {
                 name: "managerOptions",
                 type: "list",
-                choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product"]
+                choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product", 'EXIT']
             }
         ]).then(
             function (result) {
@@ -46,6 +43,10 @@ function startApplication() {
                     case "Add New Product":
                         addNewProduct()
                         break;
+                    default: 
+                    connection.end();
+                    process.exit();
+                    
                 }
             });
 }
@@ -57,6 +58,7 @@ function viewProducts() {
         if (error) throw error;
 
         //create display here
+        console.log('\n');
         console.table(data);
         startApplication();
     });
@@ -69,7 +71,7 @@ function viewLowInventory() {
     connection.query("SELECT * FROM products WHERE stock_quantity < 5", function (error, data) {
         if (error) throw error;
 
-        //create display here
+        console.log('\n');
         console.table(data);
         startApplication();
     });
@@ -100,22 +102,26 @@ function addtoInventory() {
             ]).then(
                 function (result) {
 
-
+                    //create variables for product and quantity to add
                     var numberToAdd = parseInt(result.number)
                     var selectedItem;
                     var newId;
                     var currentStockQuantity;
 
-
+                    //figure out which item was selected
                     for (i = 0; i < data.length; i++) {
                         if (result.choice === data[i].product_name) {
                             selectedItem = data[i]
                         }
                     }
+
+                    //find the current stock of the item prior to adding to it
                     currentStockQuantity = parseInt(selectedItem.stock_quantity);
+
+                    //figure out what our selected item ID is
                     newId = parseInt(selectedItem.item_id);
-                    console.log(newId)
-                    console.log(numberToAdd)
+
+                    //update db with new stock amount
                     connection.query("UPDATE products SET ? WHERE ?",
                         [
                             {
@@ -155,9 +161,11 @@ function addNewProduct() {
             }
         ]).then(function (result) {
 
+            //convert necessary numbers from strings
             var productCost = parseFloat(result.product_cost).toFixed(2);
             var productStock = parseInt(result.product_stock);
 
+            //add items to the db
             connection.query("INSERT INTO products SET ?",
                 {
                     product_name: result.product_name,

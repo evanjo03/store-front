@@ -46,7 +46,7 @@ function start() {
                 var inqId = parseInt(result.prodId);
                 var inqQuant = parseInt(result.prodQuant);
 
-                console.log(parseInt(data[0].item_id));
+                //console.log(parseInt(data[0].item_id));
                 for (i = 0; i < data.length; i++) {
                     if (inqId === parseInt(data[i].item_id)) {
                         chosenProduct = data[i];
@@ -62,12 +62,14 @@ function start() {
                     //setting variable for customer's purchase cost/product sale
                     var totalCost = inqQuant * chosenProduct.price;
 
+                    var newProductSales = chosenProduct.product_sales + totalCost;
+
                     //update stock amount db
                     connection.query("UPDATE products SET ? WHERE ?",
                         [
                             {
                                 stock_quantity: newStock,
-                                product_sales: totalCost
+                                product_sales: newProductSales
                             },
                             {
                                 item_id: chosenProduct.item_id
@@ -75,11 +77,11 @@ function start() {
                         ], function (error) {
                             if (error) throw error;
                             //show the customer the total purchase cost
-                            console.log(`Your total purchase was $${totalCost.toFixed(2)}`)
+                            console.log(`\n********************************\nYour total purchase was $${totalCost.toFixed(2)}\n********************************\n`)
                             start();
                         });
                 } else {
-                    console.log("Insufficient quantity!");
+                    console.log("\n*****************************\nInsufficient quantity!\n*****************************\n");
                     start();
                 }
             });
